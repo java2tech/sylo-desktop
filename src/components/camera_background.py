@@ -45,10 +45,10 @@ class CameraBackground(ft.Stack):
         self.fps_text = ft.Text("0 fps", size=12, opacity=0.8)
         self.controls = [
             self.video,
-            overlay,
-            ft.Container(
+                        ft.Container(
                 content=self.fps_text, alignment=ft.alignment.bottom_left, padding=5
             ),
+            overlay,
         ]
 
     # 수명주기: 화면에 올라온 직후 백그라운드 루프 시작

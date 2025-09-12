@@ -1,6 +1,9 @@
+
 import flet as ft
 
 from components.camera_background import CameraBackground
+from variables import Colors, StorageKeys
+from components.button import GoBackButton, ImageButton
 
 ICONS = getattr(ft, "Icons", None)
 if ICONS is None:
@@ -16,30 +19,43 @@ if COLORS is None:
             return f"{color},{opacity}"
     COLORS = _ColorsFallback()
 
-from components.button import ImageButton
-
 def view(page: ft.Page) -> ft.View:
-    def handle_click_start_btn(e: ft.TapEvent):
-        print("Start button clicked!")
-        page.go("/input-name")
-        page.update()
-    start_button = ImageButton(src="images/startButton.png", width=270, height=74, on_click=handle_click_start_btn)
-    logo = ft.Image(src="images/logo.svg", width=276, height=173)
-    description = ft.Container(
+    gender = page.client_storage.get(StorageKeys["GENDER"])
+    title = ft.Container(
         content=ft.Text(
-            "Style이 곧 Life가 되는 순간",
-            size=36,
-            color="white",
+            "저장하시겠습니까?",
+            size=48,
+            color=Colors["TEXT_WHITE"],
             font_family="SUIT-SemiBold",
+            text_align=ft.TextAlign.CENTER,
+            expand=True,
         ),
-        margin=ft.margin.only(top=48,bottom=87),
+        height=58,
+        margin=ft.margin.only(bottom=49),
+    )
+    select_more_btn = ft.Container(
+        content=ImageButton(
+            src="images/selectMoreButton.png",
+            width=270,
+            height=74,
+            on_click=lambda e: print("more select"),
+        ),
+        margin=ft.margin.only(bottom=29),
+    )
+    check_report_btn = ft.Container(
+        content=ImageButton(
+            src="images/checkReportButton.png",
+            width=270,
+            height=74,
+            on_click=lambda e: page.go("/select-color"),
+        ),
     )
     overlay = ft.Container(
                 content=ft.Column(
                     controls=[
-                        logo,
-                        description,
-                        start_button
+                        title,
+                        select_more_btn,
+                        check_report_btn,
                     ],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,

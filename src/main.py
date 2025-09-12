@@ -1,13 +1,5 @@
-import asyncio
-import base64
-import time
-from typing import Optional, Tuple
-import cv2
 import flet as ft
-import numpy as np
-import mediapipe as mp
 
-from components.button import ImageButton
 from router import Router
 
 def main(page: ft.Page):
@@ -31,7 +23,7 @@ def main(page: ft.Page):
     router = Router(page)
     page.on_route_change = router.route_change
     page.on_view_pop = router.view_pop
-    page.go(page.route or "/")
+    page.go("/scan-result")
 
     # cam_layer = CameraBackground(fps=24, cam_index_hint=0)
 

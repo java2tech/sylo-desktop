@@ -11,7 +11,19 @@ def ImageButton(src, on_click=None, width=270, height=74):
             border_radius=12,
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
             ink=True,
-            on_click=on_click,
+        )
+    )
+
+def GoBackButton(on_click=None):
+    return ft.GestureDetector(
+        mouse_cursor=ft.MouseCursor.CLICK,
+        on_tap=on_click,
+        content=ft.Container(
+            content=ft.Image("images/goBackButton.png", fit=ft.ImageFit.COVER),
+            width=79,
+            height=79,
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            ink=True,
         )
     )
 
