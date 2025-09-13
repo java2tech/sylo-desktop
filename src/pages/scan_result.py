@@ -57,13 +57,9 @@ if COLORS is None:
     COLORS = _ColorsFallback()
 
 def view(page: ft.Page) -> ft.View:
-    # username = page.client_storage.get(StorageKeys["USERNAME"])
-    # page.client_storage.set(StorageKeys["BODY-SHAPE"], BodyShape["FEMALE"]["H"])
-    # bodyShape = page.client_storage.get(StorageKeys["BODY-SHAPE"])
-    username = "김형진"
-    bodyShape = "O"
-    gender = "MALE"
-    #gender =  page.client_storage.get(StorageKeys["GENDER"])
+    username = page.client_storage.get(StorageKeys["USERNAME"])
+    bodyShape = page.client_storage.get(StorageKeys["BODY-SHAPE"])
+    gender =  page.client_storage.get(StorageKeys["GENDER"])
     title = ft.Container(
         content=ft.Text(
             f"{username}님은 {bodyShape}체형입니다",

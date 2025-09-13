@@ -23,7 +23,8 @@ def main(page: ft.Page):
     router = Router(page)
     page.on_route_change = router.route_change
     page.on_view_pop = router.view_pop
-    page.go("/scan-result")
+    page.go(page.route or "/")
+    # page.go("/fitting-result")
 
     # cam_layer = CameraBackground(fps=24, cam_index_hint=0)
 

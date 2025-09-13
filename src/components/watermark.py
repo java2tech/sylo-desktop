@@ -1,0 +1,2 @@
+def Watermark():
+    return ""
