@@ -22,6 +22,7 @@ StorageKeys = {
     "GENDER": "GENDER",
     "BODY-SHAPE": "BODY-SHAPE",
     "FITTING-TYPE": "FITTING-TYPE",
+    "FITTING_IMAGE_PATH": "FITTING-IMAGE-PATH",
 }
 
 Gender = {

@@ -5,10 +5,11 @@ from components.camera_background import CameraBackground
 from variables import Colors, Gender, BodyShape, StorageKeys, BodyStyles
 from components.button import GoBackButton
 
-def RecommendBox(label: str, value: str):
+def RecommendBox(label: str, value: str, on_click=None):
     return ft.Container(
         width=481,
         height=143,
+        on_click=on_click,
         content=ft.Stack(
             expand=True,
             controls=[
@@ -36,7 +37,7 @@ def RecommendBox(label: str, value: str):
                             )
                         ],  
                     ),
-                    padding=ft.padding.only(left=37, right=37, top=22, bottom=22),
+                    padding=ft.padding.only(left=32, right=32, top=22, bottom=22),
                 )
             ]
         ),
@@ -92,7 +93,10 @@ def view(page: ft.Page) -> ft.View:
         ),
         margin=ft.margin.only(bottom=15),
     )
-    recommend_box = RecommendBox(label="< 추천 스타일 >", value=BodyStyles[gender][bodyShape].get()["recommend"])
+    def handle_click_recommend_box(e: ft.TapEvent):
+        page.go("/select-fitting-type")
+        page.update()
+    recommend_box = RecommendBox(label="< 추천 스타일 >", value=BodyStyles[gender][bodyShape].get()["recommend"], on_click=handle_click_recommend_box)
     ignore_box = RecommendBox(label="< 이런 스타일은 피하세요! >", value=BodyStyles[gender][bodyShape].get()["ignore"])
     boxes = ft.Column(
         controls=[

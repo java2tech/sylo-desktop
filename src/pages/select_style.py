@@ -21,6 +21,7 @@ if COLORS is None:
 
 def view(page: ft.Page) -> ft.View:
     gender = page.client_storage.get(StorageKeys["GENDER"])
+    fitting_type = page.client_storage.get(StorageKeys["FITTING-TYPE"])
     title = ft.Container(
         content=ft.Text(
             "추천 스타일",
@@ -44,12 +45,10 @@ def view(page: ft.Page) -> ft.View:
         margin=ft.margin.only(bottom=51),
     )
     def handle_click_go_back(e: ft.TapEvent):
-        # page.go("/select-gender")
         page.go("/select-fitting-type")
-        page.update()
     go_back_btn = GoBackButton(on_click=handle_click_go_back)
     
-    def SelectStyleBtn(image_path: str):
+    def SelectStyleBtn(image_path: str, on_click=None):
         return ft.Container(
             width=114,
             height=202,
@@ -61,12 +60,16 @@ def view(page: ft.Page) -> ft.View:
                 height=202,
                 fit=ft.ImageFit.COVER,
             ),
+            on_click=on_click,
         )
     gender = page.client_storage.get(StorageKeys["GENDER"])
     bodyShape = page.client_storage.get(StorageKeys["BODY-SHAPE"])
+    def handle_click_style(idx: int):
+        page.client_storage.set(StorageKeys["FITTING_IMAGE_PATH"], f"images/fitting/{fitting_type}/{gender}/{bodyShape}/{idx}.png")
+        page.go("/fitting-view")
     styles_row = ft.Row(
         controls=[
-            SelectStyleBtn(f"images/illustration/{gender}/{bodyShape}/{idx}.png") for idx in range(1, 7)
+            SelectStyleBtn(f"images/{fitting_type}/{gender}/{bodyShape}/{idx}.png", on_click=lambda e, idx=idx: handle_click_style(idx)) for idx in range(1, 7)
         ],
         wrap=True,
         width=376,

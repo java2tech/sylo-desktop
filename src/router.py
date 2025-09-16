@@ -2,7 +2,7 @@ import re
 from urllib.parse import urlparse, parse_qs
 import flet as ft
 
-from pages import intro, input_name, select_gender, scan_body, select_fitting_type, select_style, select_color, send_image, next_menu, scan_result, fitting_result
+from pages import intro, input_name, select_gender, scan_body, select_fitting_type, select_style, select_color, send_image, next_menu, scan_result, fitting_result, fitting_view
 
 class Router:
     def __init__(self, page: ft.Page):
@@ -19,6 +19,7 @@ class Router:
             (re.compile(r"^/next-menu/?$"), self._build_next_menu),
             (re.compile(r"^/scan-result/?$"), self._build_scan_result),
             (re.compile(r"^/fitting-result/?$"), self._build_fitting_result),
+            (re.compile(r"^/fitting-view/?$"), self._build_fitting_view),
         ]
 
     def view_pop(self, e: ft.ViewPopEvent):
@@ -78,3 +79,6 @@ class Router:
     
     def _build_fitting_result(self, path: str, q: dict, params: dict):
         return [fitting_result.view(self.page)]
+    
+    def _build_fitting_view(self, path: str, q: dict, params: dict):
+        return [fitting_view.view(self.page)]
