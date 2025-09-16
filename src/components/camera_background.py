@@ -142,7 +142,7 @@ class CameraBackground(ft.Stack):
                 if ok:
                     b64 = base64.b64encode(jpg).decode("ascii")
                     self.video.content.src_base64 = b64
-                    self.video.content.update()
+                    self.video.update()
                 frame_counter += 1
                 now = time.time()
                 if now - last_sec >= 1.0:

@@ -50,7 +50,7 @@ def view(page: ft.Page) -> ft.View:
                     overlay_path="./assets/"+ fitting_image_path,
                     width=348,
                     height=615,
-                    fps=24,
+                    fps=12,
                 )
             ),
             ft.Column(

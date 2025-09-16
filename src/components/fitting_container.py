@@ -39,7 +39,7 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
     VIS_TH = 0.60
     SMOOTH_ALPHA = 0.25
 
-    WIDTH_SCALE = 1.40
+    WIDTH_SCALE = 1.60
     HEIGHT_SCALE = 2.40
     XOFF_RATIO = 0.00
     YOFF_RATIO = 0.00
@@ -115,7 +115,7 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
 
         pose = mp.solutions.pose.Pose(
             static_image_mode=False,
-            model_complexity=0,
+            model_complexity=1,
             enable_segmentation=False,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
