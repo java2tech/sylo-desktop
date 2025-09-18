@@ -1,0 +1,23 @@
+[project]
+name = "sylo"          # --project (번들/실행파일 이름에 사용)
+version = "1.0.0"      # --build-version
+description = "Sylo app"
+
+[tool.flet]
+# 번들 ID는 org + project로 자동 생성되지만, 직접 지정 가능
+project   = "sylo"                     # --project
+product   = "Sylo"                     # --product
+bundle_id = "com.java2tech.sylo"       # --bundle-id
+# (선택) org도 쓰고 싶다면: org = "com.java2tech"
+
+# 컴파일/정리 옵션 (CLI: --compile-app --compile-packages --cleanup-packages)
+compile.app      = true
+compile.packages = true
+compile.cleanup  = true
+
+[tool.flet.app]
+module = "main"    # --module-name
+path   = "."     # 앱 소스 경로 (pyproject.toml 기준 상대경로)
+
+[tool.flet.flutter.pubspec.dependency_overrides]
+webview_flutter_android = "4.10.1"
