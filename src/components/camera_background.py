@@ -6,6 +6,7 @@ import base64
 import time
 from typing import Optional, Tuple
 import cv2
+from utils.camera import open_camera
 
 PIXEL_BASE64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4n"
@@ -63,28 +64,10 @@ class CameraBackground(ft.Stack):
             self.cap.release()
             self.cap = None
 
-    async def _open_camera(self) -> Tuple[Optional[cv2.VideoCapture], Optional[int], Optional[int]]:
-        BACKENDS = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY]
-        candidates = [self.cam_index_hint] + [i for i in range(0, 6) if i != self.cam_index_hint]
-        for idx in candidates:
-            for be in BACKENDS:
-                cap = cv2.VideoCapture(idx, be)
-                if cap.isOpened():
-                    for _ in range(6):
-                        cap.read()
-                        await asyncio.sleep(0.01)
-                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-                    ok, _ = cap.read()
-                    if ok:
-                        return cap, idx, be
-                cap.release()
-        return None, None, None
-
     async def _camera_loop(self):
         self.fps_text.value = "Opening camera..."
         self.fps_text.update()
-        self.cap, used_idx, used_be = await self._open_camera()
+        self.cap = await open_camera()
         if not self.cap:
             self.fps_text.value = "Camera open failed (check device/permission)"
             self.fps_text.color = "red"

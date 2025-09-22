@@ -9,6 +9,7 @@ import cv2
 from collections import deque
 from dataclasses import dataclass
 from typing import Optional, Tuple, Callable, Awaitable
+from utils.camera import open_camera
 
 PIXEL_BASE64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4n"
@@ -159,26 +160,6 @@ class BodyShapeBackground(ft.Stack):
         except Exception:
             pass
 
-    # ----------------- Camera open (fallback) -----------------
-    async def _open_camera(self) -> Tuple[Optional[cv2.VideoCapture], Optional[int], Optional[int]]:
-        BACKENDS = [getattr(cv2, "CAP_DSHOW", 0), getattr(cv2, "CAP_MSMF", 0), getattr(cv2, "CAP_ANY", 0)]
-        candidates = [self.cam_index_hint] + [i for i in range(0, 6) if i != self.cam_index_hint]
-        for idx in candidates:
-            for be in BACKENDS:
-                cap = cv2.VideoCapture(idx, be)
-                if cap.isOpened():
-                    # 워밍업
-                    for _ in range(6):
-                        cap.read()
-                        await asyncio.sleep(0.01)
-                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-                    ok, _ = cap.read()
-                    if ok:
-                        return cap, idx, be
-                cap.release()
-        return None, None, None
-
     # ----------------- Geometry helpers -----------------
     @staticmethod
     def _euclidean(p1, p2, w, h) -> float:
@@ -274,7 +255,7 @@ class BodyShapeBackground(ft.Stack):
     async def _camera_loop(self):
         self.fps_text.value = "Opening camera..."
         self.fps_text.update()
-        self.cap, used_idx, used_be = await self._open_camera()
+        self.cap = await open_camera()
         if not self.cap:
             self.fps_text.value = "Camera open failed (check device/permission)"
             self.fps_text.color = "red"
