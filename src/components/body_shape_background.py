@@ -10,6 +10,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import Optional, Tuple, Callable, Awaitable
 from utils.camera import open_camera
+from utils.classify import classify_body_shape
 
 PIXEL_BASE64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4n"
@@ -66,21 +67,11 @@ class BodyShapeBackground(ft.Stack):
         self._w_hist = deque(maxlen=12)
         self._a_hist = deque(maxlen=12)
 
-        # heuristics thresholds
-        self.THRESH = dict(
-            INV_TRIANGLE=1.12,   # S/H, S/W (Y형)
-            PEAR=1.12,           # H/S (A형)
-            HOURGLASS_WAIST=0.78,
-            O_ABDOMEN=1.08,      # A / max(S,H)
-            O_WAIST_MALE=0.92,   # W / mean(S,H)
-            O_WAIST_FEMALE=0.90
-        )
-
         self.mp_drawing = mp.solutions.drawing_utils
         self.mp_pose = mp.solutions.pose
         self.pose = self.mp_pose.Pose(
             model_complexity=1,
-            min_detection_confidence=0.6,
+            min_detection_confidence=0.7,
             min_tracking_confidence=0.5,
             smooth_landmarks=True,
             enable_segmentation=self.enable_segmentation,
@@ -213,6 +204,17 @@ class BodyShapeBackground(ft.Stack):
             deq.append(val)
         return float(np.mean(deq)) if len(deq) else val
 
+    def _torso_x_roi(self, w, S_px, H_px, LSH, RSH, LHP, RHP, frac):
+        """
+        가로 스캔을 몸통 중심에서 어깨폭의 frac*2 범위로 제한.
+        frac=0.45 → 총 폭이 어깨폭의 90%.
+        """
+        cx = int(((LSH.x + RSH.x + LHP.x + RHP.x) / 4.0) * w)
+        half = int(max(20, frac * max(S_px, H_px)))  # 최소 20px 확보
+        xL = max(0, cx - half)
+        xR = min(w - 1, cx + half)
+        return xL, xR
+
     @staticmethod
     def _draw_width_overlay(frame, y, x0, x1, label, color=(0, 255, 0), draw_text=False):
         if x1 > x0 and 0 <= y < frame.shape[0]:
@@ -221,35 +223,6 @@ class BodyShapeBackground(ft.Stack):
                 cv2.putText(frame, f"{label}:{x1 - x0}px",
                             (x0, max(0, y - 6)), cv2.FONT_HERSHEY_SIMPLEX,
                             0.5, color, 1, cv2.LINE_AA)
-
-    # ----------------- Shape classification -----------------
-    def _classify_shape(self, S: float, H: float, W: float, A: float) -> Tuple[str, str]:
-        eps = 1e-6
-        if min(S, H, W) < eps:
-            return "UNKNOWN", "전신이 프레임에 충분히 보이지 않음."
-        meanSH = (S + H) / 2.0
-        shoulder_hip = S / (H + eps)
-        hip_shoulder = H / (S + eps)
-        waist_mean = W / (meanSH + eps)
-        abdomen_max = A / max(S, H, eps)
-        abd_vs_waist = A / (W + eps)
-
-        info = f"어깨/골반={shoulder_hip:.2f}, 허리/평균={waist_mean:.2f}, 복부/최대={abdomen_max:.2f}"
-
-        if shoulder_hip >= self.THRESH['INV_TRIANGLE'] and (S / (W + eps)) >= self.THRESH['INV_TRIANGLE']:
-            return "Y", "어깨가 골반·허리보다 넓음. " + info
-
-        o_waist_thr = self.THRESH['O_WAIST_MALE'] if self.gender == "male" else self.THRESH['O_WAIST_FEMALE']
-        if abdomen_max >= self.THRESH['O_ABDOMEN'] and waist_mean >= o_waist_thr and abd_vs_waist >= 1.06:
-            return "O", "복부가 두드러지고 허리 굴곡이 작음. " + info
-
-        if self.gender == 'female':
-            if hip_shoulder >= self.THRESH['PEAR'] and (W / (H + eps)) <= 0.85:
-                return "A", "골반>어깨, 허리가 잘록. " + info
-            if abs(shoulder_hip - 1.0) <= 0.08 and waist_mean <= self.THRESH['HOURGLASS_WAIST']:
-                return "X", "어깨≈골반, 허리가 잘록. " + info
-
-        return "H", "어깨≈골반, 허리 굴곡이 크지 않음(또는 기타 조건 미충족). " + info
 
     # ----------------- Main async camera loop -----------------
     async def _camera_loop(self):
@@ -325,16 +298,23 @@ class BodyShapeBackground(ft.Stack):
                             binmask = cv2.morphologyEx(binmask, cv2.MORPH_OPEN, kernel, iterations=1)
                             binmask = cv2.morphologyEx(binmask, cv2.MORPH_CLOSE, kernel, iterations=2)
 
+                            xL, xR = self._torso_x_roi(w, S, Hpel, LSH, RSH, LHP, RHP, frac=0.65)
+                            binROI = binmask[:, xL:xR]   # 가로 제한
+
                             torso = (y_hp - y_sh)
                             # 허리: 상부-중부 사이의 최소 폭
-                            yW_top = y_sh + int(0.45 * torso)
-                            yW_bot = y_sh + int(0.75 * torso)
+                            yW_top = y_sh + int(0.50 * torso)
+                            yW_bot = y_sh + int(0.72 * torso)
                             # 복부: 허리 아래쪽 최대 폭
-                            yA_top = y_sh + int(0.60 * torso)
-                            yA_bot = y_sh + int(0.88 * torso)
+                            yA_top = y_sh + int(0.58 * torso)
+                            yA_bot = y_sh + int(0.84 * torso)
 
-                            (w_min, xw0, xw1, y_w), _ = self._profile_min_max(binmask, yW_top, yW_bot, y_step=3, pad=2)
-                            _, (w_max, xa0, xa1, y_a) = self._profile_min_max(binmask, yA_top, yA_bot, y_step=3, pad=2)
+                            (w_min, xw0, xw1, y_w), _ = self._profile_min_max(binROI, yW_top, yW_bot, y_step=3, pad=2)
+                            _, (w_max, xa0, xa1, y_a) = self._profile_min_max(binROI, yA_top, yA_bot, y_step=3, pad=2)
+                            
+                            xw0 += xL; xw1 += xL
+                            xa0 += xL; xa1 += xL
+                            
                             W_val = float(w_min)
                             A_val = float(w_max)
                         else:
@@ -353,7 +333,7 @@ class BodyShapeBackground(ft.Stack):
                         A_s = self._smooth_append(self._a_hist, A_val)
 
                         # classify
-                        shape, reason = self._classify_shape(S_s, H_s, W_s, A_s)
+                        shape = classify_body_shape(self.gender, S_s, H_s, W_s, A_s)
                         
                         measures_dict = {
                             "shoulder": S_s,

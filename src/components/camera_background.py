@@ -1,10 +1,8 @@
-import numpy as np
-import mediapipe as mp
 import flet as ft
 import asyncio
 import base64
 import time
-from typing import Optional, Tuple
+from typing import Optional
 import cv2
 from utils.camera import open_camera
 
@@ -20,19 +18,11 @@ class CameraBackground(ft.Stack):
         self.fit = ft.StackFit.EXPAND
         self.fps = fps
         self.cam_index_hint = cam_index_hint
-
         self.running: bool = False
         self.paused: bool = False
         self.mirror: bool = True
         self.cap: Optional[cv2.VideoCapture] = None
         self.last_frame = None
-        self.mp_drawing = mp.solutions.drawing_utils
-        self.mp_pose = mp.solutions.pose
-        self.pose = self.mp_pose.Pose(
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5,
-            enable_segmentation=True,
-        )
         self.video = ft.Container(
             content=ft.Image(
                 src_base64=PIXEL_BASE64,
@@ -46,18 +36,14 @@ class CameraBackground(ft.Stack):
         self.fps_text = ft.Text("0 fps", size=12, opacity=0.8)
         self.controls = [
             self.video,
-                        ft.Container(
-                content=self.fps_text, alignment=ft.alignment.bottom_left, padding=5
-            ),
+            ft.Container(content=self.fps_text, alignment=ft.alignment.bottom_left, padding=5),
             overlay,
         ]
 
-    # 수명주기: 화면에 올라온 직후 백그라운드 루프 시작
     def did_mount(self):
         self.running = True
         self.page.run_task(self._camera_loop)
 
-    # 수명주기: 제거 직전 자원 해제
     def will_unmount(self):
         self.running = False
         if self.cap:
@@ -76,7 +62,7 @@ class CameraBackground(ft.Stack):
             return
         else:
             self.page.update()
-        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]  # 전송량 줄이기
+        encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
         last_sec = time.time()
         frame_counter = 0
         while self.running:
@@ -87,39 +73,7 @@ class CameraBackground(ft.Stack):
                     continue
                 if self.mirror:
                     frame = cv2.flip(frame, 1)
-
-                # BGR 이미지를 RGB로 변환
-                image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                image_rgb.flags.writeable = False
-
-                # MediaPipe Pose로 처리
-                results = self.pose.process(image_rgb)
-
-                image_rgb.flags.writeable = True
-                output_frame = frame.copy()
-
-                # 세그멘테이션 마스크 그리기 (배경 블러 처리)
-                if results.segmentation_mask is not None:
-                    condition = (
-                        np.stack((results.segmentation_mask,) * 3, axis=-1) > 0.1
-                    )
-                    bg_image = cv2.GaussianBlur(output_frame, (55, 55), 0)
-                    output_frame = np.where(condition, output_frame, bg_image)
-
-                # Pose 랜드마크 그리기
-                if results.pose_landmarks:
-                    self.mp_drawing.draw_landmarks(
-                        output_frame,
-                        results.pose_landmarks,
-                        self.mp_pose.POSE_CONNECTIONS,
-                        landmark_drawing_spec=self.mp_drawing.DrawingSpec(
-                            color=(245, 117, 66), thickness=2, circle_radius=2
-                        ),
-                        connection_drawing_spec=self.mp_drawing.DrawingSpec(
-                            color=(245, 66, 230), thickness=2, circle_radius=2
-                        ),
-                    )
-
+                output_frame = frame
                 self.last_frame = output_frame
                 ok, jpg = cv2.imencode(".jpg", output_frame, encode_param)
                 if ok:
