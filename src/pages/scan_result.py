@@ -106,21 +106,21 @@ def view(page: ft.Page) -> ft.View:
         spacing=15,
     )
     overlay = ft.Container(
-                content=ft.Column(
-                    controls=[
-                        title,
-                        desc,
-                        hashtags,
-                        boxes,
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                    expand=True,
-                ),
-                padding=20,
-                expand=True,
-                bgcolor=COLORS.with_opacity(0.25, "#231f20"),
-            )
+        content=ft.Column(
+            controls=[
+                title,
+                desc,
+                hashtags,
+                boxes,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True,
+        ),
+        padding=20,
+        expand=True,
+        bgcolor=COLORS.with_opacity(0.25, "#231f20"),
+    )
     return ft.View(
         route="/scan-result",
         controls=[

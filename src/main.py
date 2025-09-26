@@ -1,6 +1,19 @@
 import flet as ft
+from components.splash_screen import show_splash_screen
 
-from router import Router
+Router = None
+
+def _ensure_router():
+    import importlib.util, pathlib, os
+    spec = importlib.util.find_spec("cv2")
+    if spec and spec.submodule_search_locations:
+        cv2_dir = pathlib.Path(list(spec.submodule_search_locations)[0])
+        if hasattr(os, "add_dll_directory"):
+            os.add_dll_directory(str(cv2_dir))
+    global Router
+    if Router is None:
+        import importlib
+        Router = importlib.import_module("router").Router
 
 def main(page: ft.Page):
     page.title = "Sylo"
@@ -20,22 +33,13 @@ def main(page: ft.Page):
     page.window.height = 1000
     page.window.resizable = False
     page.window.maximizable = False
+    show_splash_screen(page)
+    _ensure_router()
+    page.controls.clear()
     router = Router(page)
     page.on_route_change = router.route_change
     page.on_view_pop = router.view_pop
     page.go(page.route or "/")
-    # page.go("/fitting-result")
-
-    # cam_layer = CameraBackground(fps=24, cam_index_hint=0)
-
-"""     def on_close(_):
-        cam_layer.running = False
-        if cam_layer.cap:
-            cam_layer.cap.release()
-
-    page.on_close = on_close
-    page.add(cam_layer) """
-
 
 if __name__ == "__main__":
     ft.app(target=main, assets_dir="assets")

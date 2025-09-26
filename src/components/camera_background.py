@@ -61,6 +61,9 @@ class CameraBackground(ft.Stack):
             self.page.update()
             return
         else:
+            self.fps_text.value = "Camera opened!"
+            self.fps_text.color = "white"
+            self.fps_text.update()
             self.page.update()
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 75]
         last_sec = time.time()

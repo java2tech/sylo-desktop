@@ -4,7 +4,7 @@ from typing import Optional
 
 async def open_camera() -> Optional[cv2.VideoCapture]:
     BACKENDS = [
-        cv2.CAP_ANY, cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_VFW,
+        cv2.CAP_ANY, cv2.CAP_MSMF, cv2.CAP_DSHOW, cv2.CAP_VFW,
         cv2.CAP_GSTREAMER, cv2.CAP_FFMPEG, cv2.CAP_OPENCV_MJPEG
     ]
     for idx in range(0, 8):
