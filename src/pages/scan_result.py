@@ -61,6 +61,7 @@ def view(page: ft.Page) -> ft.View:
     username = page.client_storage.get(StorageKeys["USERNAME"])
     bodyShape = page.client_storage.get(StorageKeys["BODY-SHAPE"])
     gender =  page.client_storage.get(StorageKeys["GENDER"])
+    base64_image = page.client_storage.get(StorageKeys["BODY-SHAPE-IMAGE-BASE64"])
     title = ft.Container(
         content=ft.Text(
             f"{username}님은 {bodyShape}체형입니다",
@@ -72,6 +73,15 @@ def view(page: ft.Page) -> ft.View:
         ),
         height=58,
         margin=ft.margin.only(bottom=15),
+    )
+    image = ft.Container(
+        content=ft.Image(
+            src_base64=base64_image,
+            width=151,
+            height=375,
+            fit=ft.ImageFit.COVER,
+        ),
+        margin=ft.margin.only(bottom=12, top=25)
     )
     desc = ft.Container(
         content=ft.Text(
@@ -109,6 +119,7 @@ def view(page: ft.Page) -> ft.View:
         content=ft.Column(
             controls=[
                 title,
+                image,
                 desc,
                 hashtags,
                 boxes,

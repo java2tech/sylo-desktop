@@ -127,7 +127,7 @@ class BodyShapeBackground(ft.Stack):
                 try:
                     if asyncio.iscoroutinefunction(cb):
                         # Flet 이벤트 루프에서 안전하게 태스크로 실행
-                        await cb(shape, measures)
+                        await cb(shape, measures, self.last_frame)
                     else:
                         cb(shape, measures)
                 except Exception as e:

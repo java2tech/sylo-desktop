@@ -4,6 +4,8 @@ import flet as ft
 from components.body_shape_background import BodyShapeBackground
 from variables import Colors, Gender, StorageKeys
 from components.button import GoBackButton
+from utils.draw_pose import draw_pose_letter
+from utils.image import cv2_to_base64
 
 ICONS = getattr(ft, "Icons", None)
 if ICONS is None:
@@ -86,7 +88,10 @@ def view(page: ft.Page) -> ft.View:
                 expand=True,
                 bgcolor=COLORS.with_opacity(0.25, "#231f20"),
             )
-    async def on_fixed_shape(shape: str, measures: dict):
+    async def on_fixed_shape(shape: str, measures: dict, frame):
+        drawed_image = draw_pose_letter(frame, shape)
+        base64_image = cv2_to_base64(drawed_image)
+        await page.client_storage.set_async(StorageKeys["BODY-SHAPE-IMAGE-BASE64"], base64_image)
         print(f"Fixed shape: {shape}, measures: {measures}")
         await page.client_storage.set_async(StorageKeys["BODY-SHAPE"], shape)
         page.go("/scan-result")
