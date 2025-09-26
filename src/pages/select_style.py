@@ -58,7 +58,7 @@ def view(page: ft.Page) -> ft.View:
                 src=image_path,
                 width=114,
                 height=202,
-                fit=ft.ImageFit.COVER,
+                fit=ft.ImageFit.CONTAIN,
             ),
             on_click=on_click,
         )

@@ -42,7 +42,7 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
     WIDTH_SCALE = 1.60
     HEIGHT_SCALE = 2.40
     XOFF_RATIO = 0.00
-    YOFF_RATIO = 0.00
+    YOFF_RATIO = -0.10
     OPACITY = 1
     ANGLE_BIAS_DEG = 0.0
     ANCHOR_TOP_RATIO = 0.08
