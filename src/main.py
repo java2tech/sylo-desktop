@@ -3,13 +3,35 @@ from components.splash_screen import show_splash_screen
 
 Router = None
 
+def dump_opencv_diagnostics():
+    from pathlib import Path
+    import os, cv2, sys
+    cv2_dir = Path(cv2.__file__).parent
+    txt = [
+        f"cv2.__version__ = {cv2.__version__}",
+        f"cv2.__file__    = {cv2.__file__}",
+        f"PLUGIN_PATH env = {os.environ.get('OPENCV_VIDEOIO_PLUGIN_PATH')}",
+        "videoio plugins = " + ", ".join([p.name for p in cv2_dir.glob("opencv_videoio_ffmpeg*")]),
+    ]
+    Path.home().joinpath("opencv_debug.txt").write_text("\n".join(txt), encoding="utf-8")
+
 def _ensure_router():
-    import importlib.util, pathlib, os
-    spec = importlib.util.find_spec("cv2")
-    if spec and spec.submodule_search_locations:
-        cv2_dir = pathlib.Path(list(spec.submodule_search_locations)[0])
+    import os, sys
+    dump_opencv_diagnostics()
+    if getattr(sys, "frozen", False):
+        from pathlib import Path
+        import cv2  # 플러그인 로드는 아직 안 됨 - 경로만 확인
+        cv2_dir = Path(cv2.__file__).parent
+        # 1) OpenCV에 플러그인 위치 알려주기
+        os.environ.setdefault("OPENCV_VIDEOIO_PLUGIN_PATH", str(cv2_dir))
+        # 2) Windows DLL 검색 경로에 cv2 폴더 추가 (Py 3.8+)
         if hasattr(os, "add_dll_directory"):
-            os.add_dll_directory(str(cv2_dir))
+            _h = os.add_dll_directory(str(cv2_dir))
+            # 핸들이 GC 되면 경로가 해제되므로 보관
+            globals()["_cv2_dll_dir_handle"] = _h
+        # 3) (선택) 기본 우선순위를 Windows 카메라 스택(MSMF/DShow) 위주로
+        os.environ.setdefault("OPENCV_VIDEOIO_PRIORITY_MSMF", "10000")
+        os.environ.setdefault("OPENCV_VIDEOIO_PRIORITY_DSHOW", "9000")
     global Router
     if Router is None:
         import importlib

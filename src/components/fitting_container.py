@@ -1,5 +1,3 @@
-# fitting_container.py
-# -*- coding: utf-8 -*-
 import base64
 import asyncio
 import time
@@ -10,6 +8,8 @@ from typing import Optional, Tuple
 import cv2
 import numpy as np
 import flet as ft
+
+from utils.camera import open_camera
 
 # ==== 투명 1x1 PNG (placeholder) ====
 TRANSPARENT_1PX_PNG_B64 = (
@@ -85,6 +85,25 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
         
         # Use a default white background for cropping, as ft.Image has no bgcolor
         self._bg_bgr = (255, 255, 255)
+        
+    def get_last_frame_base64(self):
+        """
+        마지막으로 표시된 프레임의 base64 문자열을 반환하며,
+        호출 시 카메라 루프를 멈추고 리소스를 정리합니다.
+        """
+        # 카메라 루프 중지 및 리소스 해제
+        self._stop_event.set()
+        try:
+            if self._cap:
+                self._cap.release()
+        except Exception:
+            pass
+        try:
+            if self._pose:
+                self._pose.close()
+        except Exception:
+            pass
+        return self._last_frame_base64
 
     # ==== Flet lifecycle ====
     def did_mount(self):
@@ -106,7 +125,7 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
 
     # ==== 메인 루프 ====
     async def _run_loop(self):
-        cap = self._find_working_camera(self.CAMERA_SEARCH_RANGE)
+        cap = await open_camera()
         if cap is None:
             self._show_text_frame("No camera found")
             return
@@ -199,8 +218,8 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
             if not ok:
                 return
             b64 = base64.b64encode(buf).decode("utf-8")
-            
             self.src_base64 = b64
+            self._last_frame_base64 = b64
             self.update()
         except Exception:
             pass
@@ -210,26 +229,6 @@ class FittingContainer(ft.Image): # Inherit from ft.Image
         cv2.putText(canvas, text, (20, self.height_px // 2),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
         self._push_frame(canvas)
-
-    def _find_working_camera(self, indices):
-        BACKENDS = [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_ANY]
-        for idx in indices:
-            for be in BACKENDS:
-                cap = cv2.VideoCapture(idx, be)
-                if cap.isOpened():
-                    for _ in range(6):
-                        cap.read()
-                        time.sleep(0.01)
-                    
-                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.CAM_WIDTH)
-                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.CAM_HEIGHT)
-                    ok, frame = cap.read()
-                    
-                    if ok and frame is not None:
-                        return cap
-                
-                cap.release()
-        return None
 
     @staticmethod
     def _ensure_bgra(img):

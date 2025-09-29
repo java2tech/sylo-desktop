@@ -2,7 +2,7 @@
 import flet as ft
 
 from components.camera_background import CameraBackground
-from variables import Colors, StorageKeys
+from variables import Colors, StorageKeys, BLANK_B64
 from components.button import GoBackButton, ImageButton
 
 ICONS = getattr(ft, "Icons", None)
@@ -50,24 +50,28 @@ def view(page: ft.Page) -> ft.View:
         page.update()
     go_back_btn = GoBackButton(on_click=handle_click_go_back)
     
-    def SelectStyleBtn(image_path: str):
+    def SelectStyleBtn(image_b64: str):
         return ft.Container(
             width=169,
             height=298,
             border_radius=24,
             bgcolor=Colors["TEXT_WHITE"],
             content=ft.Image(
-                src=image_path,
+                src_base64=image_b64,
                 width=114,
                 height=202,
                 fit=ft.ImageFit.COVER,
             ),
         )
-    gender = page.client_storage.get(StorageKeys["GENDER"])
-    bodyShape = page.client_storage.get(StorageKeys["BODY-SHAPE"])
+    result_images = [
+        page.client_storage.get(StorageKeys["FITTING-RESULT-IMAGE-BASE64-1"]) or BLANK_B64,
+        page.client_storage.get(StorageKeys["FITTING-RESULT-IMAGE-BASE64-2"]) or BLANK_B64,
+        page.client_storage.get(StorageKeys["FITTING-RESULT-IMAGE-BASE64-3"]) or BLANK_B64,
+        page.client_storage.get(StorageKeys["FITTING-RESULT-IMAGE-BASE64-4"]) or BLANK_B64,
+    ]
     styles_row = ft.Row(
         controls=[
-            SelectStyleBtn(f"images/illustration/{gender}/{bodyShape}/{idx}.png") for idx in range(1, 5)
+            SelectStyleBtn(b64) for b64 in result_images
         ],
         wrap=True,
         width=348,
@@ -79,7 +83,6 @@ def view(page: ft.Page) -> ft.View:
         page.go("/send-image")
         page.update()
     def handle_click_home(e: ft.TapEvent):
-        # page.client_storage.clear()
         page.go("/")
         page.update()
     btns = ft.Container(

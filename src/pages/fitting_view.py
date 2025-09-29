@@ -1,7 +1,6 @@
 
 import flet as ft
 
-from components.camera_background import CameraBackground
 from variables import Colors, StorageKeys
 from components.button import GoBackButton, ImageButton
 from components.fitting_container import FittingContainer
@@ -37,6 +36,25 @@ def view(page: ft.Page) -> ft.View:
     def handle_click_go_back(e: ft.TapEvent):
         page.go("/select-style")
         page.update()
+    fitting_container = FittingContainer(
+                    overlay_path="./assets/"+ fitting_image_path,
+                    width=348,
+                    height=615,
+                    fps=12,
+                )
+    def get_current_fitting_result_idx():
+        idx = 1
+        for i in range(1, 5):
+            if page.client_storage.get(StorageKeys[f"FITTING-RESULT-IMAGE-BASE64-{i}"]) is None:
+                idx = i
+                break
+        return idx
+    def handle_click_save(e: ft.TapEvent):
+        base64 = fitting_container.get_last_frame_base64()
+        current_idx = get_current_fitting_result_idx()
+        page.client_storage.set(StorageKeys[f"FITTING-RESULT-IMAGE-BASE64-{current_idx}"], base64)
+        page.go("/next-menu")
+        page.update()
     go_back_btn = GoBackButton(on_click=handle_click_go_back)
     styles_row = ft.Row(
         controls=[
@@ -46,16 +64,11 @@ def view(page: ft.Page) -> ft.View:
                 height=615,
                 border_radius=24,
                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-                content=FittingContainer(
-                    overlay_path="./assets/"+ fitting_image_path,
-                    width=348,
-                    height=615,
-                    fps=12,
-                )
+                content=fitting_container,
             ),
             ft.Column(
                 controls=[
-                    ImageButton(src="images/saveButton.png", width=61, height=62),
+                    ImageButton(src="images/saveButton.png", width=61, height=62, on_click=lambda e: handle_click_save(e)),
                 ],
                 alignment=ft.MainAxisAlignment.END,
                 height=615,

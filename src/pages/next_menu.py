@@ -42,12 +42,15 @@ def view(page: ft.Page) -> ft.View:
         ),
         margin=ft.margin.only(bottom=29),
     )
+    def handle_click_check_report(e: ft.TapEvent):
+        page.go("/fitting-result")
+        page.update()
     check_report_btn = ft.Container(
         content=ImageButton(
             src="images/checkReportButton.png",
             width=270,
             height=74,
-            on_click=lambda e: page.go("/select-color"),
+            on_click=lambda e: handle_click_check_report(e),
         ),
     )
     overlay = ft.Container(
@@ -57,7 +60,7 @@ def view(page: ft.Page) -> ft.View:
                         select_more_btn,
                         check_report_btn,
                     ],
-                    alignment=ft.MainAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.START,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     expand=True,
                 ),

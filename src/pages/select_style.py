@@ -46,6 +46,7 @@ def view(page: ft.Page) -> ft.View:
     )
     def handle_click_go_back(e: ft.TapEvent):
         page.go("/select-fitting-type")
+        page.update()
     go_back_btn = GoBackButton(on_click=handle_click_go_back)
     
     def SelectStyleBtn(image_path: str, on_click=None):
@@ -67,9 +68,10 @@ def view(page: ft.Page) -> ft.View:
     def handle_click_style(idx: int):
         page.client_storage.set(StorageKeys["FITTING_IMAGE_PATH"], f"images/fitting/{fitting_type}/{gender}/{bodyShape}/{idx}.png")
         page.go("/fitting-view")
+        page.update()
     styles_row = ft.Row(
         controls=[
-            SelectStyleBtn(f"images/{fitting_type}/{gender}/{bodyShape}/{idx}.png", on_click=lambda e, idx=idx: handle_click_style(idx)) for idx in range(1, 7)
+            SelectStyleBtn(f"images/fitting/{fitting_type}/{gender}/{bodyShape}/{idx}.png" if fitting_type == "photo" else f"images/{fitting_type}/{gender}/{bodyShape}/{idx}.png", on_click=lambda e, idx=idx: handle_click_style(idx)) for idx in range(1, 7)
         ],
         wrap=True,
         width=376,

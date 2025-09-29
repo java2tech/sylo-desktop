@@ -19,6 +19,7 @@ if COLORS is None:
 from components.button import ImageButton
 
 def view(page: ft.Page) -> ft.View:
+    page.client_storage.clear()
     def handle_click_start_btn(e: ft.TapEvent):
         print("Start button clicked!")
         page.go("/input-name")
